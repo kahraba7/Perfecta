@@ -171,13 +171,18 @@
     position: relative; z-index: 3;
     padding: 0 60px;
     max-width: 660px;
-    margin-top: -40px;
+    margin-top: 180px;
     animation: heroFadeIn 1.2s ease both;
   }
   @keyframes heroFadeIn {
     from { opacity: 0; transform: translateY(30px); }
     to { opacity: 1; transform: translateY(0); }
   }
+  /* Hide redundant text elements that duplicate the baked-in hero image text */
+  #hero .hero-eyebrow,
+  #hero .hero-title,
+  #hero .hero-subtitle,
+  #hero .hero-divider { display: none; }
   .hero-eyebrow {
     font-size: 10px; letter-spacing: 5px; color: var(--gold);
     font-weight: 500; margin-bottom: 24px;
@@ -202,9 +207,9 @@
     margin-bottom: 24px;
   }
   .hero-desc {
-    color: rgba(250,248,245,0.52); font-size: 12px;
-    line-height: 1.95; max-width: 400px; margin-bottom: 48px;
-    letter-spacing: 0.5px;
+    color: rgba(250,248,245,0.80); font-size: 13px;
+    line-height: 2; max-width: 420px; margin-bottom: 36px;
+    letter-spacing: 0.4px;
   }
   .hero-actions { display: flex; gap: 14px; align-items: center; flex-wrap: wrap; }
   .btn-primary {
@@ -442,23 +447,22 @@
   .ba-gallery {
     margin-top: 60px;
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 3px;
-    grid-auto-rows: 420px;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 6px;
+    grid-auto-rows: 480px;
   }
   .ba-gallery-item {
     position: relative; overflow: hidden; cursor: pointer;
-    min-height: 320px;
   }
   .ba-gallery-item.wide {
-    grid-column: span 2;
+    grid-column: span 1;
   }
   .ba-gallery-item img {
     width: 100%; height: 100%; object-fit: cover;
-    object-position: center top;
+    object-position: center 20%;
     display: block;
     transition: transform 0.6s cubic-bezier(0.4,0,0.2,1), filter 0.4s;
-    filter: grayscale(15%);
+    filter: grayscale(10%);
   }
   .ba-gallery-item:hover img { transform: scale(1.04); filter: grayscale(0%); }
   .ba-gallery-caption {
@@ -482,9 +486,8 @@
     color: var(--champagne); text-transform: uppercase;
   }
   @media (max-width: 900px) {
-    .ba-gallery { grid-template-columns: 1fr; grid-auto-rows: 320px; }
+    .ba-gallery { grid-template-columns: 1fr; grid-auto-rows: 340px; }
     .ba-gallery-item.wide { grid-column: 1; }
-    .ba-gallery-item { min-height: 280px; }
   }
 
   /* Keep old .ba-card styles for slider mode */
@@ -1105,7 +1108,7 @@
     .lang-switch { display: none; }
     .hamburger { display: flex; }
     section { padding: 70px 20px; }
-    .hero-content { padding: 0 20px 70px; max-width: 100%; }
+    .hero-content { padding: 0 20px 70px; max-width: 100%; margin-top: 55vh; }
     .hero-trust { display: none; }
     .hero-img-wrap { display: none; }
     body.rtl .hero-img-wrap { display: none; }
@@ -1119,7 +1122,7 @@
     .strip-item { padding: 24px 20px; border-bottom: 1px solid rgba(212,184,150,0.1); }
     .services-grid { grid-template-columns: 1fr; gap: 1px; }
     .ba-layout { grid-template-columns: 1fr; }
-    .ba-gallery { grid-template-columns: 1fr; }
+    .ba-gallery { grid-template-columns: 1fr; grid-auto-rows: 340px; }
     .ba-gallery-item.wide { grid-column: 1; }
     .ba-card.ba-main { grid-column: 1; grid-row: auto; aspect-ratio: 3/4; }
     .ba-card.ba-secondary { grid-column: 1; aspect-ratio: 3/2; }
@@ -2146,21 +2149,21 @@ function renderBeforeAfter() {
   const g = document.getElementById('ba-grid');
   if (!g) return;
 
-  // Full gallery — all available images across all doctors
+  // Treatment results gallery — ba_*.jpg files only, no doctor images
   const items = [
-    { img: 'ba_1.jpg', doctor: 'Dr. Entsar Aboelrish', treatment: currentLang==='ar'?'تكبير الشفاه':'Lip Augmentation',      badge: 'Before & After', wide: true  },
-    { img: 'ba_2.jpg', doctor: 'Dr. Entsar Aboelrish', treatment: currentLang==='ar'?'بوتوكس الجبهة':'Forehead Botox',        badge: 'Before & After', wide: false },
-    { img: 'ba_3.jpg', doctor: 'Dr. Entsar Aboelrish', treatment: currentLang==='ar'?'إزالة الشعر بالليزر':'Laser Hair Removal', badge: 'Treatment',      wide: false },
-    { img: 'ba_4.jpg', doctor: 'Dr. Entsar Aboelrish', treatment: currentLang==='ar'?'حشو الوجه الكامل':'Full Face Filler',   badge: 'Before & After', wide: false },
-    { img: 'ba_5.jpg', doctor: 'Dr. Entsar Aboelrish', treatment: currentLang==='ar'?'حشو الوجه الكامل':'Full Face Filler',   badge: 'Before & After', wide: true  },
-    { img: 'ba_6.jpg', doctor: 'Dr. Entsar Aboelrish', treatment: currentLang==='ar'?'حشو الوجه الكامل':'Full Face Filler',   badge: 'Before & After', wide: false },
-    { img: 'ba_7.jpg', doctor: 'Dr. Entsar Aboelrish', treatment: currentLang==='ar'?'تجميل الوجه الكامل':'Full Face Beautification', badge: 'Before & After', wide: false },
-    { img: 'ba_8.jpg', doctor: 'Dr. Entsar Aboelrish', treatment: currentLang==='ar'?'علاج حب الشباب':'Acne Treatment',       badge: 'Before & After', wide: false },
+    { img: 'ba_1.jpg', doctor: 'Dr. Entsar Aboelrish', treatment: currentLang==='ar'?'تكبير الشفاه':'Lip Augmentation',           badge: 'Before & After' },
+    { img: 'ba_2.jpg', doctor: 'Dr. Entsar Aboelrish', treatment: currentLang==='ar'?'بوتوكس الجبهة':'Forehead Botox',             badge: 'Before & After' },
+    { img: 'ba_3.jpg', doctor: 'Dr. Entsar Aboelrish', treatment: currentLang==='ar'?'إزالة الشعر بالليزر':'Laser Hair Removal',   badge: 'Treatment'      },
+    { img: 'ba_4.jpg', doctor: 'Dr. Entsar Aboelrish', treatment: currentLang==='ar'?'حشو الوجه الكامل':'Full Face Filler',        badge: 'Before & After' },
+    { img: 'ba_5.jpg', doctor: 'Dr. Entsar Aboelrish', treatment: currentLang==='ar'?'حشو الوجه الكامل':'Full Face Filler',        badge: 'Before & After' },
+    { img: 'ba_6.jpg', doctor: 'Dr. Entsar Aboelrish', treatment: currentLang==='ar'?'حشو الوجه الكامل':'Full Face Filler',        badge: 'Before & After' },
+    { img: 'ba_7.jpg', doctor: 'Dr. Entsar Aboelrish', treatment: currentLang==='ar'?'تجميل الوجه الكامل':'Full Face Beautification', badge: 'Before & After' },
+    { img: 'ba_8.jpg', doctor: 'Dr. Entsar Aboelrish', treatment: currentLang==='ar'?'علاج حب الشباب':'Acne Treatment',             badge: 'Before & After' },
   ];
 
   g.className = 'ba-gallery';
   g.innerHTML = items.map(item => `
-    <div class="ba-gallery-item${item.wide ? ' wide' : ''}">
+    <div class="ba-gallery-item">
       <img src="${item.img}" alt="${item.treatment}" loading="lazy" decoding="async">
       <div class="ba-gallery-badge">${item.badge}</div>
       <div class="ba-gallery-caption">
