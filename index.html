@@ -1820,9 +1820,9 @@ function renderDoctorsGrid() {
       <div class="doctor-card-img-wrap">
         ${d.logoCard
           ? `<div style="width:100%;height:100%;background:linear-gradient(160deg,#1A1714 0%,#231E19 100%);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;">
-               <img src="perfecta_logo.jpg" alt="Perfecta Clinics" style="width:120px;height:auto;object-fit:contain;opacity:0.9;">
+               <img src="perfecta_logo.jpg" alt="Perfecta Clinics" loading="lazy" decoding="async" style="width:120px;height:auto;object-fit:contain;">
              </div>`
-          : `<img src="${d.img}" alt="${d.name}" style="width:100%;height:100%;object-fit:cover;object-position:top center;display:block;">`
+          : `<img src="${d.img}" alt="${d.name}" loading="lazy" decoding="async" style="width:100%;height:100%;object-fit:cover;object-position:top center;display:block;">`
         }
         <div class="doctor-card-border"></div>
         <div class="doctor-card-overlay">
@@ -1833,6 +1833,11 @@ function renderDoctorsGrid() {
       </div>
     </div>
   `).join('');
+  // Register any newly injected images with the load handler
+  g.querySelectorAll('img').forEach(img => {
+    if (img.complete && img.naturalWidth > 0) img.classList.add('loaded');
+    else img.addEventListener('load', () => img.classList.add('loaded'), { passive: true });
+  });
 }
 
 function renderDoctorSelect() {
@@ -1931,8 +1936,8 @@ try {
     // Real-time services listener: keeps SERVICES[] in sync with Firestore
     // so price changes in admin reflect immediately on the frontend.
     servicesRef.orderBy('sortOrder', 'asc').onSnapshot(snapshot => {
-      if (snapshot.empty) return; // wait for admin to seed
-      SERVICES = snapshot.docs.map(doc => {
+      if (snapshot.empty) return; // Firestore collection not seeded — keep defaults
+      const fetched = snapshot.docs.map(doc => {
         const d = doc.data();
         return {
           id: doc.id, _docId: doc.id,
@@ -1942,11 +1947,14 @@ try {
           duration: d.duration || '', durationMin: d.durationMin || 30,
           price: d.price || ''
         };
-      });
-      // Refresh all service-dependent UI
-      try { renderServices(); } catch(e) {}
-      try { renderServiceSelect(); } catch(e) {}
-      try { renderContactServices(); } catch(e) {}
+      }).filter(s => s.name); // only use docs that actually have a name
+      if (fetched.length > 0) {
+        SERVICES = fetched;
+        // Refresh all service-dependent UI
+        try { renderServices(); } catch(e) {}
+        try { renderServiceSelect(); } catch(e) {}
+        try { renderContactServices(); } catch(e) {}
+      }
     }, err => console.warn('Services listener error:', err));
 
   } else {
@@ -2164,6 +2172,11 @@ function renderBeforeAfter() {
       </div>
     </div>
   `).join('');
+  // Register image load handlers for dynamically injected images
+  g.querySelectorAll('img').forEach(img => {
+    if (img.complete && img.naturalWidth > 0) img.classList.add('loaded');
+    else img.addEventListener('load', () => img.classList.add('loaded'), { passive: true });
+  });
 }
 
 function renderTestimonials() {
@@ -2272,9 +2285,20 @@ function openBooking(serviceId) {
     const s = SERVICES.find(x => x.id === serviceId);
     if (s) booking.service = s;
   }
-  goStep(0);
-  document.getElementById('booking-modal').classList.add('active');
-  document.body.style.overflow = 'hidden';
+  // Reset all step panels manually before goStep to avoid stale active states
+  document.querySelectorAll('.step-panel').forEach((p, i) => p.classList.toggle('active', i === 0));
+  document.querySelectorAll('.step').forEach((s, i) => {
+    s.classList.toggle('active', i === 0);
+    s.classList.remove('done');
+  });
+  currentStep = 0;
+  renderDoctorSelect();
+  // Show modal
+  const modal = document.getElementById('booking-modal');
+  if (modal) {
+    modal.classList.add('active');
+    document.body.style.overflow = 'hidden';
+  }
 }
 
 function openBookingService(id) { openBooking(id); }
@@ -2836,7 +2860,7 @@ function init() {
     if (bar) bar.style.width = pct + '%';
   }, { passive: true });
 
-  // Intersection observer for reveal — with will-change optimization
+  // Intersection observer for reveal — cards only, not sections
   const obs = new IntersectionObserver((entries) => {
     entries.forEach(e => {
       if (e.isIntersecting) {
@@ -2845,16 +2869,21 @@ function init() {
         obs.unobserve(e.target);
       }
     });
-  }, { threshold: 0.08, rootMargin: '0px 0px -40px 0px' });
-  document.querySelectorAll('section, #about-strip, .review-card, .service-card').forEach((el, i) => {
-    el.classList.add('reveal');
-    el.style.willChange = 'opacity, transform';
-    // Stagger cards
-    if (el.classList.contains('review-card') || el.classList.contains('service-card')) {
-      el.style.transitionDelay = `${(i % 4) * 60}ms`;
-    }
-    obs.observe(el);
-  });
+  }, { threshold: 0, rootMargin: '200px 0px 200px 0px' }); // generous margins so content is visible before entering viewport
+
+  // Only apply reveal animation to individual cards, NOT to entire sections
+  // (sections being invisible causes all dynamic content inside to appear empty)
+  function observeCards() {
+    document.querySelectorAll('.review-card, .service-card, .doctor-card, .ba-gallery-item, .faq-item').forEach((el, i) => {
+      if (!el.classList.contains('reveal')) {
+        el.classList.add('reveal');
+        el.style.willChange = 'opacity, transform';
+        el.style.transitionDelay = `${(i % 4) * 50}ms`;
+        obs.observe(el);
+      }
+    });
+  }
+  observeCards();
 }
 
 // ════════════════════════════════════════════════
