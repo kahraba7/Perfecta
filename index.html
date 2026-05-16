@@ -1062,6 +1062,8 @@
   img:not([loading]),
   .hero-video-bg,
   .hero-img { opacity: 1 !important; transition: opacity 0.6s ease; }
+  /* B&A gallery images always visible — bypass lazy-load fade */
+  .ba-gallery-item img { opacity: 1 !important; }
 
   /* ── PREMIUM SERVICE CARD ── */
   .service-card { transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1); }
