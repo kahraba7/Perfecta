@@ -126,7 +126,10 @@
     display: block;
     filter: blur(3px) brightness(0.75);
     transform: scale(1.04);
+    opacity: 1 !important; /* overridden by specific hero opacity below */
   }
+  /* Hero background image specific opacity */
+  #hero .hero-video-bg { opacity: 0.38; }
   /* Extra cinematic vignette on top of hero image */
   #hero::after {
     content: '';
@@ -156,11 +159,12 @@
     position: absolute; right: 7%; bottom: 0;
     width: 400px; height: 92%;
     overflow: hidden;
+    z-index: 2;
   }
   .hero-img {
     width: 100%; height: 100%; object-fit: cover; object-position: top center;
     filter: grayscale(15%) contrast(1.05);
-    opacity: 0.9;
+    opacity: 0.9 !important;
   }
   .hero-img-overlay {
     position: absolute; inset: 0;
@@ -168,7 +172,7 @@
                 linear-gradient(to top, var(--charcoal) 0%, transparent 25%);
   }
   .hero-content {
-    position: relative; z-index: 2;
+    position: relative; z-index: 3;
     padding: 0 60px;
     max-width: 660px;
     margin-top: -40px;
@@ -213,6 +217,8 @@
     font-weight: 600; border: none; cursor: pointer;
     transition: all 0.3s; font-family: var(--font-body);
     text-transform: uppercase;
+    position: relative; z-index: 4;
+    display: inline-block;
   }
   .btn-primary:hover { background: var(--champagne); transform: translateY(-2px); }
   .btn-outline {
@@ -221,6 +227,7 @@
     font-weight: 400; border: 1px solid rgba(250,248,245,0.2);
     cursor: pointer; transition: all 0.3s; font-family: var(--font-body);
     text-transform: uppercase;
+    position: relative; z-index: 4;
   }
   .btn-outline:hover { border-color: var(--champagne); color: var(--champagne); }
   .hero-trust {
@@ -239,6 +246,7 @@
     display: flex; flex-direction: column; align-items: center; gap: 8px;
     color: rgba(250,248,245,0.25); font-size: 9px; letter-spacing: 3px;
     animation: bounce 2s infinite;
+    z-index: 3;
   }
   .scroll-hint::after {
     content: ''; width: 1px; height: 44px;
@@ -1045,9 +1053,13 @@
   .booking-success-wa:hover { background: #1BA854; }
 
   /* ── IMAGE LAZY LOAD ── */
-  img { opacity: 0; transition: opacity 0.6s ease; }
-  img.loaded { opacity: 1; }
-  img.hero-img { opacity: 0.9; } /* hero always visible after load */
+  img[loading="lazy"] { opacity: 0; transition: opacity 0.6s ease; }
+  img[loading="lazy"].loaded { opacity: 1; }
+  /* Hero / eager images always visible */
+  img[loading="eager"],
+  img:not([loading]),
+  .hero-video-bg,
+  .hero-img { opacity: 1 !important; transition: opacity 0.6s ease; }
 
   /* ── PREMIUM SERVICE CARD ── */
   .service-card { transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1); }
@@ -1635,7 +1647,7 @@
       </div>
 
       <!-- Step 1: Service -->
-      <div class="step-panel active" id="step-1">
+      <div class="step-panel" id="step-1">
         <div class="form-label" id="s1-label">Select Treatment</div>
         <div class="service-select-grid" id="service-select-grid"></div>
         <div class="modal-nav">
@@ -2805,12 +2817,14 @@ function init() {
   renderServiceSelect();
   renderContactServices();
 
-  // Lazy load images (skip hero which is eager)
-  document.querySelectorAll('img:not(.hero-img)').forEach(img => {
-    if (!img.hasAttribute('loading')) img.setAttribute('loading', 'lazy');
-    if (!img.hasAttribute('decoding')) img.setAttribute('decoding', 'async');
-    if (img.complete) { img.classList.add('loaded'); }
-    else { img.addEventListener('load', () => img.classList.add('loaded'), { passive: true }); }
+  // Image load handling — add .loaded class when each image loads
+  document.querySelectorAll('img').forEach(img => {
+    if (img.complete && img.naturalWidth > 0) {
+      img.classList.add('loaded');
+    } else {
+      img.addEventListener('load', () => img.classList.add('loaded'), { passive: true });
+      img.addEventListener('error', () => img.classList.add('loaded'), { passive: true }); // don't block layout on error
+    }
   });
 
   // Scroll progress bar
